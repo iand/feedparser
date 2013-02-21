@@ -110,6 +110,9 @@ func NewFeed(r io.Reader) (*Feed, error) {
 		case xml.EndElement:
 			e := strings.ToLower(t.Name.Local)
 			if e == atomEntry || e == rssItem {
+				if item.Id == "" {
+					item.Id = item.Link
+				}
 				feed.Items = append(feed.Items, item)
 			}
 		case xml.CharData:
