@@ -27,10 +27,16 @@ type FeedItem struct {
 	Title       string
 	Description string
 	Link        string
+	Image       string
 	When        time.Time
 }
 
 const feedTitle = "title"
+const (
+	atomNs  = "http://www.w3.org/2005/atom"
+	mediaNs = "http://search.yahoo.com/mrss/"
+	ytNs    = "http://gdata.youtube.com/schemas/2007"
+)
 
 const (
 	rssChannel     = "channel"
@@ -53,8 +59,18 @@ const (
 )
 
 const (
-	levelFeed = 1
-	levelPost = 2
+	mediaGroup     = "group"
+	mediaThumbnail = "thumbnail"
+)
+
+const (
+	attrUrl  = "url"
+	attrName = "name"
+)
+
+const (
+	levelFeed = iota
+	levelPost
 )
 
 func parseTime(f, v string) time.Time {
@@ -94,6 +110,7 @@ func NewFeed(r io.Reader) (*Feed, error) {
 			case (!atom && tag == rssItem) || (atom && tag == atomEntry):
 				level = levelPost
 				item = &FeedItem{When: time.Now()}
+
 			case atom && tag == atomLink:
 				for _, a := range t.Attr {
 					if strings.ToLower(a.Name.Local) == atomLinkHref {
@@ -106,7 +123,28 @@ func NewFeed(r io.Reader) (*Feed, error) {
 						break
 					}
 				}
+
+			case ns == mediaNs && tag == mediaThumbnail:
+				if item.Image == "" {
+					var url, name string
+					for _, attr := range t.Attr {
+						ns := strings.ToLower(attr.Name.Space)
+						a := strings.ToLower(attr.Name.Local)
+						switch {
+						case a == attrUrl:
+							url = attr.Value
+
+						case ns == ytNs && a == attrName:
+							name = attr.Value
+						}
+					}
+					if url != "" && name == "sddefault" {
+						item.Image = url
+					}
+				}
+
 			}
+
 		case xml.EndElement:
 			e := strings.ToLower(t.Name.Local)
 			if e == atomEntry || e == rssItem {
@@ -134,7 +172,7 @@ func NewFeed(r io.Reader) (*Feed, error) {
 				switch {
 				case (!atom && tag == rssId) || (atom && tag == atomId):
 					item.Id = text
-				case ns == "" && tag == feedTitle:
+				case (ns == "" || ns == atomNs) && tag == feedTitle:
 					item.Title = text
 				case (!atom && tag == rssDescription) || (atom && tag == atomSummary):
 					item.Description = text
@@ -158,6 +196,7 @@ func NewFeed(r io.Reader) (*Feed, error) {
 					}
 					item.When = parseTime(f, text)
 				}
+
 			}
 		}
 	}
