@@ -28,6 +28,7 @@ type FeedItem struct {
 	Description string
 	Link        string
 	Image       string
+	ImageSource string
 	When        time.Time
 }
 
@@ -125,22 +126,26 @@ func NewFeed(r io.Reader) (*Feed, error) {
 				}
 
 			case ns == mediaNs && tag == mediaThumbnail:
-				if item.Image == "" {
-					var url, name string
-					for _, attr := range t.Attr {
-						ns := strings.ToLower(attr.Name.Space)
-						a := strings.ToLower(attr.Name.Local)
-						switch {
-						case a == attrUrl:
-							url = attr.Value
+				var url, name string
+				for _, attr := range t.Attr {
+					ns := strings.ToLower(attr.Name.Space)
+					a := strings.ToLower(attr.Name.Local)
+					switch {
+					case a == attrUrl:
+						url = attr.Value
 
-						case ns == ytNs && a == attrName:
-							name = attr.Value
-						}
+					case ns == ytNs && a == attrName:
+						name = attr.Value
 					}
-					if url != "" && name == "sddefault" {
-						item.Image = url
-					}
+				}
+				if url != "" && (item.Image == "" ||
+					name == "sddefault" ||
+					(name == "hqdefault" && item.ImageSource != "sddefault") ||
+					(name == "mqdefault" && item.ImageSource != "sddefault" && item.ImageSource != "hqdefault") ||
+					(name == "default " && item.ImageSource != "mqdefault" && item.ImageSource != "sddefault" && item.ImageSource != "hqdefault")) {
+					item.Image = url
+					item.ImageSource = name
+
 				}
 
 			}
