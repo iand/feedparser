@@ -11,6 +11,9 @@ import (
 	"io"
 	"strings"
 	"time"
+
+	"code.google.com/p/go-charset/charset"
+	_ "code.google.com/p/go-charset/data"
 )
 
 type Feed struct {
@@ -88,6 +91,7 @@ func NewFeed(r io.Reader) (*Feed, error) {
 	feed := &Feed{}
 	item := &FeedItem{}
 	parser := xml.NewDecoder(r)
+	parser.CharsetReader = charset.NewReader
 	for {
 		token, err := parser.Token()
 		if err == io.EOF {
