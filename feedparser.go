@@ -3,7 +3,7 @@
   information, see <http://unlicense.org/> or the accompanying UNLICENSE file.
 */
 
-// Simple parser for RSS and Atom feeds
+// Package feedparser provides a simple parser for RSS and Atom feeds
 package feedparser
 
 import (
