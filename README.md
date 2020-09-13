@@ -2,6 +2,8 @@
 
 Go package for parsing RSS and Atom feeds
 
+[![Build Status](https://travis-ci.org/iand/feedparser.svg?branch=master)](https://travis-ci.org/iand/feedparser)
+
 
 ## Installation
 
